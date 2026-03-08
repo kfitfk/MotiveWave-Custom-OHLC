@@ -129,8 +129,8 @@ public class CustomOHLC extends com.motivewave.platform.sdk.study.Study
     tab = sd.addTab(get("TAB_LINES"));
 
     grp = tab.addGroup("", false);
-    grp.addRow(new PathDescriptor(OPEN, get("LBL_OPEN_LINE"), defaults.getYellowLine(), 1f, null, true, false, true));
-    grp.addRow(new PathDescriptor(HIGH, get("LBL_HIGH_LINE"), defaults.getGreenLine(), 1f, null, true, false, true));
+    grp.addRow(new PathDescriptor(OPEN, get("LBL_OPEN_LINE"), defaults.getYellowLine(), 1f, null, false, false, true));
+    grp.addRow(new PathDescriptor(HIGH, get("LBL_HIGH_LINE"), defaults.getGreenLine(), 1f, null, false, false, true));
     var path = new PathDescriptor(DHIGH, get("LBL_DHIGH_LINE"), defaults.getGreenLine(), 1f, null, false, false, true);
     path.setOverrideTagDisplay(true);
     path.setContinuous(false);
@@ -140,15 +140,15 @@ public class CustomOHLC extends com.motivewave.platform.sdk.study.Study
     path.setOverrideTagDisplay(true);
     path.setContinuous(false);
     grp.addRow(path);
-    grp.addRow(new PathDescriptor(LOW, get("LBL_LOW_LINE"), defaults.getRedLine(), 1f, null, true, false, true));
+    grp.addRow(new PathDescriptor(LOW, get("LBL_LOW_LINE"), defaults.getRedLine(), 1f, null, false, false, true));
     path = new PathDescriptor(DLOW, get("LBL_DLOW_LINE"), defaults.getRedLine(), 1f, null, false, false, true);
     path.setOverrideTagDisplay(true);
     path.setContinuous(false);
     grp.addRow(path);
-    grp.addRow(new PathDescriptor(CLOSE, get("LBL_PREV_CLOSE_LINE"), defaults.getBlueLine(), 1f, null, true, false, true));
+    grp.addRow(new PathDescriptor(CLOSE, get("LBL_PREV_CLOSE_LINE"), defaults.getBlueLine(), 1f, null, false, false, true));
     grp.addRow(new PathDescriptor(POPEN, get("LBL_PREV_OPEN_LINE"), defaults.getYellowLine(), 1f, null, false, false, true));
-    grp.addRow(new PathDescriptor(PHIGH, get("LBL_PREV_HIGH_LINE"), defaults.getGreenLine(), 1f, new float[] {3, 3}, false, false, true));
-    grp.addRow(new PathDescriptor(PLOW, get("LBL_PREV_LOW_LINE"), defaults.getRedLine(), 1f, new float[] {3, 3}, false, false, true));
+    grp.addRow(new PathDescriptor(PHIGH, get("LBL_PREV_HIGH_LINE"), defaults.getGreenLine(), 1f, new float[] {3, 3}, true, false, true));
+    grp.addRow(new PathDescriptor(PLOW, get("LBL_PREV_LOW_LINE"), defaults.getRedLine(), 1f, new float[] {3, 3}, true, false, true));
     grp.addRow(new PathDescriptor(OHIGH, get("LBL_OVERNIGHT_HIGH_LINE"), defaults.getGreenLine(), 1f, new float[] {3, 3}, false, false, true));
     grp.addRow(new PathDescriptor(OLOW, get("LBL_OVERNIGHT_LOW_LINE"), defaults.getRedLine(), 1f, new float[] {3, 3}, false, false, true));
     grp.addRow(new PathDescriptor(PMHIGH, "Pre-Market High", defaults.getGreenLine(), 1f, new float[] {3, 3}, false, false, true));
@@ -359,11 +359,13 @@ public class CustomOHLC extends com.motivewave.platform.sdk.study.Study
         if (showPMLow() || showPMHigh()) {
           for (var l : lines) {
             if (l.pmlow == Float.MAX_VALUE || l.pmhigh == Float.MIN_VALUE) {
+              // System.out.println("[PM-FALLBACK] Entering fallback for pmlow=" + l.pmlow + " pmhigh=" + l.pmhigh);
               for (int i = 0; i < series.size(); i++) {
                 long barTime = series.getStartTime(i);
-                if (barTime >= l.pmStart && barTime < l.pmEnd) {
-                  float bLow = filterPMLow(barTime, series.getLow(i), series.getOpen(i), series.getClose(i));
-                  float bHigh = filterPMHigh(barTime, series.getHigh(i), series.getOpen(i), series.getClose(i));
+                if (barTime >= l.pmStart && barTime < l.pmEnd && !isAt8amET(barTime)) {
+                  float bLow = series.getLow(i);
+                  float bHigh = series.getHigh(i);
+                  // System.out.println("[PM-FALLBACK] time=" + new java.util.Date(barTime) + " H=" + bHigh + " L=" + bLow);
                   if (bLow < l.pmlow) l.pmlow = bLow;
                   if (bHigh > l.pmhigh) l.pmhigh = bHigh;
                 }
@@ -398,9 +400,13 @@ public class CustomOHLC extends com.motivewave.platform.sdk.study.Study
       if (p < ls.olow) ls.olow = p;
       if (p > ls.ohigh) ls.ohigh = p;
     }
-    if ((showPMLow() || showPMHigh()) && time >= ls.pmStart && time < ls.pmEnd && !isAt8amET(time)) {
-      if (p < ls.pmlow) ls.pmlow = p;
-      if (p > ls.pmhigh) ls.pmhigh = p;
+    if ((showPMLow() || showPMHigh()) && time >= ls.pmStart && time < ls.pmEnd) {
+      if (isAt8amET(time)) {
+        // skip ticks during 8:00-8:04 AM ET
+      } else {
+        if (p < ls.pmlow) ls.pmlow = p;
+        if (p > ls.pmhigh) ls.pmhigh = p;
+      }
     }
 
     if (rth && !instr.isInsideTradingHours(time, rth)) return;
@@ -580,22 +586,22 @@ public class CustomOHLC extends com.motivewave.platform.sdk.study.Study
     return cal.get(Calendar.HOUR_OF_DAY) == 8 && cal.get(Calendar.MINUTE) <= 5;
   }
 
-  /** Filter out spike highs at 8:00-8:05 AM ET for pre-market data */
+  private static final float SPIKE_THRESHOLD = 0.005f; // 0.5%
+
+  /** Filter out spike highs at 8:00-8:05 AM ET for pre-market data.
+      Uses Close as baseline since Open can also be spiked. */
   private float filterPMHigh(long time, float high, float open, float close) {
-    if (isAt8amET(time)) {
-      float maxOC = Math.max(open, close);
-      float body = Math.abs(open - close);
-      if (high - maxOC > body) return maxOC;
+    if (isAt8amET(time) && close > 0 && (high - close) / close > SPIKE_THRESHOLD) {
+      return close;
     }
     return high;
   }
 
-  /** Filter out spike lows at 8:00-8:05 AM ET ET for pre-market data */
+  /** Filter out spike lows at 8:00-8:05 AM ET for pre-market data.
+      Uses Close as baseline since Open can also be spiked. */
   private float filterPMLow(long time, float low, float open, float close) {
-    if (isAt8amET(time)) {
-      float minOC = Math.min(open, close);
-      float body = Math.abs(open - close);
-      if (minOC - low > body) return minOC;
+    if (isAt8amET(time) && close > 0 && (close - low) / close > SPIKE_THRESHOLD) {
+      return close;
     }
     return low;
   }
@@ -782,8 +788,8 @@ public class CustomOHLC extends com.motivewave.platform.sdk.study.Study
       drawLine(gc, ctx, lowPath, x, ly, low, "L:");
       if (cy != -999) drawLine(gc, ctx, closePath, x, cy, prevClose, "C:");
       if (poly != -999) drawLine(gc, ctx, pOpenPath, x, poly, popen, "PO:");
-      if (ply != -999) drawLine(gc, ctx, pLowPath, x, ply, plow, "PL:");
-      if (phy != -999) drawLine(gc, ctx, pHighPath, x, phy, phigh, "PH:");
+      if (ply != -999) drawLine(gc, ctx, pLowPath, x, ply, plow, "PDL:");
+      if (phy != -999) drawLine(gc, ctx, pHighPath, x, phy, phigh, "PDH:");
       if (oly != -999) drawLine(gc, ctx, oLowPath, x, oly, olow, "OL:");
       if (ohy != -999) drawLine(gc, ctx, oHighPath, x, ohy, ohigh, "OH:");
       if (pmly != -999) drawLine(gc, ctx, pmLowPath, x, pmly, pmlow, "PML:");
@@ -939,9 +945,10 @@ public class CustomOHLC extends com.motivewave.platform.sdk.study.Study
         nextLs.olow = barLow;
         nextLs.ohigh = barHigh;
 
-        if (barStart >= nextLs.pmStart && barStart < nextLs.pmEnd) {
-          nextLs.pmlow = filterPMLow(barStart, barLow, bar.getOpen(), bar.getClose());
-          nextLs.pmhigh = filterPMHigh(barStart, barHigh, bar.getOpen(), bar.getClose());
+        if (barStart >= nextLs.pmStart && barStart < nextLs.pmEnd && !isAt8amET(barStart)) {
+          // System.out.println("[PM-BAR-NEW] time=" + new java.util.Date(barStart) + " rawH=" + barHigh + " rawL=" + barLow + " O=" + bar.getOpen() + " C=" + bar.getClose() + " curPMH=" + nextLs.pmhigh + " curPML=" + nextLs.pmlow);
+          if (barLow < nextLs.pmlow) nextLs.pmlow = barLow;
+          if (barHigh > nextLs.pmhigh) nextLs.pmhigh = barHigh;
         }
 
         if (barStart >= nextLs.sodRth && barStart < nextLs.sodRth + range) {
@@ -987,11 +994,10 @@ public class CustomOHLC extends com.motivewave.platform.sdk.study.Study
           if (barLow < ls.olow) ls.olow = barLow;
           if (barHigh > ls.ohigh) ls.ohigh = barHigh;
         }
-        if (barStart >= ls.pmStart && barStart < ls.pmEnd) {
-          float pmFilteredLow = filterPMLow(barStart, barLow, bar.getOpen(), bar.getClose());
-          float pmFilteredHigh = filterPMHigh(barStart, barHigh, bar.getOpen(), bar.getClose());
-          if (pmFilteredLow < ls.pmlow) ls.pmlow = pmFilteredLow;
-          if (pmFilteredHigh > ls.pmhigh) ls.pmhigh = pmFilteredHigh;
+        if (barStart >= ls.pmStart && barStart < ls.pmEnd && !isAt8amET(barStart)) {
+          // System.out.println("[PM-BAR-UPD] time=" + new java.util.Date(barStart) + " rawH=" + barHigh + " rawL=" + barLow + " curPMH=" + ls.pmhigh + " curPML=" + ls.pmlow);
+          if (barLow < ls.pmlow) ls.pmlow = barLow;
+          if (barHigh > ls.pmhigh) ls.pmhigh = barHigh;
         }
 
         if (barStart >= ls.sodRth && barStart < ls.sodRth + range) {
