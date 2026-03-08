@@ -35,7 +35,7 @@ import com.motivewave.platform.sdk.study.StudyHeader;
 /** Plots the open, high and previous close values for each day */
 @StudyHeader(
     namespace="com.motivewave",
-    id="MyOHLC", 
+    id="MyOHLC",
     rb="com.motivewave.platform.study.nls.strings",
     name="CustomOHLC",
     desc="DESC_OHLC",
@@ -43,31 +43,31 @@ import com.motivewave.platform.sdk.study.StudyHeader;
     overlay=true,
     studyOverlay=false,
     requiresBarUpdates=true)
-public class CustomOHLC extends com.motivewave.platform.sdk.study.Study 
+public class CustomOHLC extends com.motivewave.platform.sdk.study.Study
 {
   enum Values { DHIGH_VAL, DLOW_VAL, DMID_VAL }
 
   final static String FONT="font", ALIGN="align", OPEN="open", HIGH="high", DHIGH="dhigh", LOW="low", DLOW="dlow", CLOSE="close",
       POPEN="popen", PLOW="plow", PHIGH="phigh", MID="mid", DMID="dmid", OHIGH="ohigh", OLOW="olow", PMHIGH="pmhigh", PMLOW="pmlow",
-      RHIGH="orHigh", RLOW="orLow",RHIGH_1="orHigh1", RLOW_1="orLow1",RHIGH_2="orHigh2", RLOW_2="orLow2", 
+      RHIGH="orHigh", RLOW="orLow",RHIGH_1="orHigh1", RLOW_1="orLow1",RHIGH_2="orHigh2", RLOW_2="orLow2",
       RHIGH_3="orHigh3", RLOW_3="orLow3",RHIGH_4="orHigh4", RLOW_4="orLow4",RHIGH_5="orHigh5", RLOW_5="orLow5",
       RANGE="range", RANGE_INT="rangeInt", RANGE_1="range1", RANGE_INT_1="rangeInt1",RANGE_2="range2", RANGE_INT_2="rangeInt2",
       RANGE_3="range3", RANGE_INT_3="rangeInt3", RANGE_4="range4", RANGE_INT_4="rangeInt4",RANGE_5="range5", RANGE_INT_5="rangeInt5",
       SHOW_ALL="showAll", MAX_PRINTS="maxPrints", RTH="rth", SHORTEN_LATEST="sl", TIMEFRAME="tf";
-  
+
   final static String LEFT="L", RIGHT="R", MIDDLE="M";
   final static String VAL_RTH="R", VAL_EXT="E", VAL_CHART="C";
   final static String RANGE_MIN="MIN", RANGE_SECONDS="SEC";
-  
+
   final static BarSize DAY = BarSize.getBarSize(BarSizeType.LINEAR, 1440);
   final static BarSize MIN = BarSize.getBarSize(BarSizeType.LINEAR, 1);
-  
+
   @Override
   public void initialize(Defaults defaults)
   {
     var sd = createSD();
     var tab = sd.addTab(get("TAB_GENERAL"));
-    
+
     List<NVP> aligns = new ArrayList();
     aligns.add(new NVP(get("LBL_LEFT"), LEFT));
     aligns.add(new NVP(get("LBL_MIDDLE"), MIDDLE));
@@ -84,8 +84,8 @@ public class CustomOHLC extends com.motivewave.platform.sdk.study.Study
     timeIntervals.add(new NVP(get("LBL_WEEKLY"), "W1"));
     timeIntervals.add(new NVP(get("LBL_MONTHLY"), "M1"));
     timeIntervals.add(new NVP(get("LBL_YEARLY"), "Y1"));
-    
-   
+
+
     var grp = tab.addGroup("", false);
     grp.addRow(new DiscreteDescriptor(TIMEFRAME, get("LBL_TIMEFRAME"), "D", timeIntervals));
     grp.addRow(new IntegerDescriptor(MAX_PRINTS, get("LBL_MAX_PRINTS"), 5, 1, 999, 1), new BooleanDescriptor(SHOW_ALL, get("LBL_SHOW_ALL"), false, false),
@@ -178,7 +178,7 @@ public class CustomOHLC extends com.motivewave.platform.sdk.study.Study
     d2.setSource2(RLOW_2);
     d2.setOrCompare(true);
     sd.addDependency(d2);
-    
+
     var d3 = new EnabledDependency(RHIGH_3, RANGE_3, RANGE_INT_3);
     d3.setSource2(RLOW_3);
     d3.setOrCompare(true);
@@ -194,7 +194,7 @@ public class CustomOHLC extends com.motivewave.platform.sdk.study.Study
     d5.setOrCompare(true);
     sd.addDependency(d5);
 
-    sd.addQuickSettings(TIMEFRAME, RTH, FONT, ALIGN, RANGE, RANGE_INT, RHIGH, RLOW, 
+    sd.addQuickSettings(TIMEFRAME, RTH, FONT, ALIGN, RANGE, RANGE_INT, RHIGH, RLOW,
     		RANGE_1, RANGE_INT_1, RHIGH_1, RLOW_1, RANGE_2, RANGE_INT_2, RHIGH_2, RLOW_2,
     		RANGE_3, RANGE_INT_3, RHIGH_3, RLOW_3, RANGE_4, RANGE_INT_4, RHIGH_4, RLOW_4, RANGE_5, RANGE_INT_5, RHIGH_5, RLOW_5);
 
@@ -229,7 +229,7 @@ public class CustomOHLC extends com.motivewave.platform.sdk.study.Study
     clear = clear ||Util.compare(timeframe, "W1") && bs.getIntervalMinutes() >= 7*1440;
     clear = clear ||Util.compare(timeframe, "M1") && bs.getIntervalMinutes() >= 30*1440;
     clear = clear ||Util.compare(timeframe, "Y1") && bs.getIntervalMinutes() >= 365*1440;
-    
+
     if (clear || !series.hasData()) {
       lines.clear();
       visibleLines.clear();
@@ -261,7 +261,7 @@ public class CustomOHLC extends com.motivewave.platform.sdk.study.Study
       pmLowPath = s.getPath(PMLOW);
       rHighPath = s.getPath(RHIGH);
       rLowPath = s.getPath(RLOW);
-      
+
       //////////////////////
       rHighPath1 = s.getPath(RHIGH_1);
       rLowPath1 = s.getPath(RLOW_1);
@@ -273,14 +273,14 @@ public class CustomOHLC extends com.motivewave.platform.sdk.study.Study
       rLowPath4 = s.getPath(RLOW_4);
       rHighPath5 = s.getPath(RHIGH_5);
       rLowPath5 = s.getPath(RLOW_5);
-      
-      
-      
-      
-      
-      
-      
-      
+
+
+
+
+
+
+
+
       align = s.getString(ALIGN, RIGHT);
 
       var r = s.getInteger(RANGE, 5);
@@ -297,7 +297,7 @@ public class CustomOHLC extends com.motivewave.platform.sdk.study.Study
       if (Util.compare(s.getString(RANGE_INT_2, RANGE_MIN), RANGE_MIN)) r2 *= Util.MILLIS_IN_MINUTE;
       else r2 *= 1000;
       range2 = r2;
-      
+
       var r3 = s.getInteger(RANGE_3, 5);
       if (Util.compare(s.getString(RANGE_INT_3, RANGE_MIN), RANGE_MIN)) r3 *= Util.MILLIS_IN_MINUTE;
       else r3 *= 1000;
@@ -307,20 +307,20 @@ public class CustomOHLC extends com.motivewave.platform.sdk.study.Study
       if (Util.compare(s.getString(RANGE_INT_4, RANGE_MIN), RANGE_MIN)) r4 *= Util.MILLIS_IN_MINUTE;
       else r4 *= 1000;
       range4 = r4;
-      
+
       var r5 = s.getInteger(RANGE_5, 5);
       if (Util.compare(s.getString(RANGE_INT_5, RANGE_MIN), RANGE_MIN)) r5 *= Util.MILLIS_IN_MINUTE;
       else r5 *= 1000;
       range5 = r5;
-      
+
 
       String rthData = s.getString(RTH, VAL_EXT);
       if (Util.compare(rthData, VAL_RTH)) rth = true;
       else if (Util.compare(rthData, VAL_CHART) && ctx.isRTH()) rth = true;
       else rth = false;
-  
+
       addFigure(figure);
-  
+
       var ls = Util.isEmpty(lines) ? null : lines.get(lines.size()-1);
       if (ls != null && ls.eod <= ctx.getCurrentTime()) {
         long sod = getStartOfNextPeriod(ls.sod, instr, false);
@@ -340,11 +340,11 @@ public class CustomOHLC extends com.motivewave.platform.sdk.study.Study
           }
           if (_s > sod) sod = _s;
         }
-        
+
         ls = new LineSet(null, sod, getEndOfPeriod(sod, instr, false), getStartOfPeriodRTH(sod, instr), instr);
         lines.add(ls);
       }
-      
+
       try {
         boolean _rth = rth;
         if (showOLow() || showOHigh() || showPMLow() || showPMHigh()) _rth = false;
@@ -375,7 +375,7 @@ public class CustomOHLC extends com.motivewave.platform.sdk.study.Study
       catch(Exception exc) {
         exc.printStackTrace();
       }
-      
+
       Collections.sort(lines); // This should already be in order
       if (!showAll && lines.size() > maxPrints) {
         while(lines.size() > maxPrints) lines.remove(0);
@@ -385,7 +385,7 @@ public class CustomOHLC extends com.motivewave.platform.sdk.study.Study
       calcInProgress = false;
     }
   }
-  
+
   @Override
   public void onTick(DataContext ctx, Tick tick)
   {
@@ -398,13 +398,13 @@ public class CustomOHLC extends com.motivewave.platform.sdk.study.Study
       if (p < ls.olow) ls.olow = p;
       if (p > ls.ohigh) ls.ohigh = p;
     }
-    if ((showPMLow() || showPMHigh()) && time >= ls.pmStart && time < ls.pmEnd && !isAt7amET(time)) {
+    if ((showPMLow() || showPMHigh()) && time >= ls.pmStart && time < ls.pmEnd && !isAt8amET(time)) {
       if (p < ls.pmlow) ls.pmlow = p;
       if (p > ls.pmhigh) ls.pmhigh = p;
     }
 
     if (rth && !instr.isInsideTradingHours(time, rth)) return;
-    
+
     // This code should really be refactored with the Tick Calculator below
     var series = ctx.getDataSeries();
     if (time >= ls.eod) {
@@ -415,7 +415,7 @@ public class CustomOHLC extends com.motivewave.platform.sdk.study.Study
       var nextLs = new LineSet(ls, sod, getEndOfPeriod(sod, instr, false), getStartOfPeriodRTH(sod, instr), instr);
       nextLs.low = nextLs.high = nextLs.open = nextLs.close = nextLs.olow = nextLs.ohigh = p;
 
-      if (time >= nextLs.pmStart && time < nextLs.pmEnd && !isAt7amET(time)) {
+      if (time >= nextLs.pmStart && time < nextLs.pmEnd && !isAt8amET(time)) {
         nextLs.pmlow = nextLs.pmhigh = p;
       }
 
@@ -424,16 +424,16 @@ public class CustomOHLC extends com.motivewave.platform.sdk.study.Study
 //////////////////////////////////////////////////
       if (time >= nextLs.sodRth && time < nextLs.sodRth + range1) {
       nextLs.rLow_1 = nextLs.rHigh_1 = p;}
-      
+
       if (time >= nextLs.sodRth && time < nextLs.sodRth + range2) {
       nextLs.rLow_2 = nextLs.rHigh_2 = p;}
-      
+
       if (time >= nextLs.sodRth && time < nextLs.sodRth + range3) {
       nextLs.rLow_3 = nextLs.rHigh_3 = p;}
-      
+
       if (time >= nextLs.sodRth && time < nextLs.sodRth + range4) {
       nextLs.rLow_4 = nextLs.rHigh_4 = p;}
-      
+
       if (time >= nextLs.sodRth && time < nextLs.sodRth + range5) {
           nextLs.rLow_5 = nextLs.rHigh_5 = p;}
 
@@ -448,7 +448,7 @@ public class CustomOHLC extends com.motivewave.platform.sdk.study.Study
         if (p < ls.olow) ls.olow = p;
         if (p > ls.ohigh) ls.ohigh = p;
       }
-      if (time >= ls.pmStart && time < ls.pmEnd && !isAt7amET(time)) {
+      if (time >= ls.pmStart && time < ls.pmEnd && !isAt8amET(time)) {
         if (p < ls.pmlow) ls.pmlow = p;
         if (p > ls.pmhigh) ls.pmhigh = p;
       }
@@ -479,13 +479,13 @@ public class CustomOHLC extends com.motivewave.platform.sdk.study.Study
         if (p > ls.rHigh_5) ls.rHigh_5 = p;
       }
 
-      
+
 
       ls.mid = (ls.low + ls.high)/2;
       ls.close = p;
       if (ls.open == Float.MIN_VALUE) ls.open = p;
     }
-    
+
     series.setFloat(Values.DHIGH_VAL, ls.high);
     series.setFloat(Values.DMID_VAL, ls.mid);
     series.setFloat(Values.DLOW_VAL, ls.low);
@@ -546,7 +546,7 @@ public class CustomOHLC extends com.motivewave.platform.sdk.study.Study
     long eod = instr.getEndOfDay(time, rth);
     return eod >= time ? eod : instr.getEndOfDay(time+Util.MILLIS_IN_DAY, rth);
   }
-  
+
   private long getStartOfPeriodRTH(long sopExt, Instrument instr) {
     switch(timeframe) {
     case "W1":
@@ -573,16 +573,16 @@ public class CustomOHLC extends com.motivewave.platform.sdk.study.Study
 
   private static final TimeZone ET = TimeZone.getTimeZone("America/New_York");
 
-  /** Check if timestamp falls within 7:00 AM ET minute */
-  private boolean isAt7amET(long time) {
+  /** Check if timestamp falls within 8:00-8:05 AM ET (5-minute spike window) */
+  private boolean isAt8amET(long time) {
     Calendar cal = Calendar.getInstance(ET);
     cal.setTimeInMillis(time);
-    return cal.get(Calendar.HOUR_OF_DAY) == 7 && cal.get(Calendar.MINUTE) == 0;
+    return cal.get(Calendar.HOUR_OF_DAY) == 8 && cal.get(Calendar.MINUTE) <= 5;
   }
 
-  /** Filter out spike highs at 7:00 AM ET for pre-market data */
+  /** Filter out spike highs at 8:00-8:05 AM ET for pre-market data */
   private float filterPMHigh(long time, float high, float open, float close) {
-    if (isAt7amET(time)) {
+    if (isAt8amET(time)) {
       float maxOC = Math.max(open, close);
       float body = Math.abs(open - close);
       if (high - maxOC > body) return maxOC;
@@ -590,9 +590,9 @@ public class CustomOHLC extends com.motivewave.platform.sdk.study.Study
     return high;
   }
 
-  /** Filter out spike lows at 7:00 AM ET for pre-market data */
+  /** Filter out spike lows at 8:00-8:05 AM ET ET for pre-market data */
   private float filterPMLow(long time, float low, float open, float close) {
-    if (isAt7amET(time)) {
+    if (isAt8amET(time)) {
       float minOC = Math.min(open, close);
       float body = Math.abs(open - close);
       if (minOC - low > body) return minOC;
@@ -622,7 +622,7 @@ public class CustomOHLC extends com.motivewave.platform.sdk.study.Study
     cal.set(Calendar.MILLISECOND, 0);
     return cal.getTimeInMillis();
   }
-  
+
   // Keep track of the latest lines
   private List<LineSet> lines = new ArrayList();
   private List<LineSet> visibleLines = new ArrayList();
@@ -635,7 +635,7 @@ public class CustomOHLC extends com.motivewave.platform.sdk.study.Study
   private Lines figure = new Lines();
 
 
-  // This figure draws all of the lines  
+  // This figure draws all of the lines
   class Lines extends Figure
   {
     @Override
@@ -664,7 +664,7 @@ public class CustomOHLC extends com.motivewave.platform.sdk.study.Study
           _lines.add(l);
         }
       }
-      
+
       for(var l : _lines) l.layout(ctx);
       visibleLines = _lines;
     }
@@ -676,7 +676,7 @@ public class CustomOHLC extends com.motivewave.platform.sdk.study.Study
       for(var l : visibleLines) l.draw(gc, ctx);
     }
   }
-  
+
   class LineSet implements Comparable<LineSet>
   {
     LineSet(LineSet prev, long sod, long eod, long sodRth, Instrument instr)
@@ -720,14 +720,14 @@ public class CustomOHLC extends com.motivewave.platform.sdk.study.Study
       if (contains(x, y, rHighPath5, rhy5)) return true;
       return false;
     }
-    
+
     void layout(DrawContext ctx)
     {
       var series = ctx.getDataContext().getDataSeries();
       lx = ctx.translateTime(sod);
       rx = ctx.translateTime(eod);
       xrth = ctx.translateTime(sodRth);
-      
+
       if (isLatest() && shortenLatest) {
         int _rx = ctx.translateTime(series.getEndTime());
         if (font != null && font.isEnabled()) {
@@ -740,7 +740,7 @@ public class CustomOHLC extends com.motivewave.platform.sdk.study.Study
         if (_rx < rx) rx = _rx;
         if (_rx < xrth) xrth = _rx;
       }
-      
+
       cx = ctx.translateTime(series.getStartTime());
       if (openPath.isEnabled()) oy = ctx.translateValue(open);
       if (highPath.isEnabled() || showDHigh()) hy = ctx.translateValue(high);
@@ -773,7 +773,7 @@ public class CustomOHLC extends com.motivewave.platform.sdk.study.Study
 
 
     }
-    
+
     void draw(Graphics2D gc, DrawContext ctx)
     {
       int x = rth ? xrth : lx;
@@ -805,23 +805,23 @@ public class CustomOHLC extends com.motivewave.platform.sdk.study.Study
       drawLine(gc, ctx, rLowPath5, xrth, rly5, rLow_5, "ORL6:");
       drawLine(gc, ctx, rHighPath5, xrth, rhy5, rHigh_5, "ORH6:");
 
-      
+
       if (isLatest()) {
         if (!highPath.isEnabled() && showDHigh()) drawLine(gc, ctx, dHighPath, cx, hy, high, "H:");
         if (!lowPath.isEnabled() && showDLow()) drawLine(gc, ctx, dLowPath, cx, ly, low, "L:");
         if (!midPath.isEnabled() && showDMid()) drawLine(gc, ctx, dMidPath, cx, my, mid, "M:");
       }
     }
-    
-    boolean isLatest() { return !lines.isEmpty() && lines.get(lines.size()-1) == this; } 
-     
+
+    boolean isLatest() { return !lines.isEmpty() && lines.get(lines.size()-1) == this; }
+
     boolean contains(double x, double y, PathInfo path, int py)
     {
       if (path == null || !path.isEnabled()) return false;
       if (x < lx || x > rx) return false;
       return Math.abs(y - py) <= 6;
     }
-    
+
     void drawLine(Graphics2D gc, DrawContext ctx, PathInfo path, int x, int y, float value, String prefix)
     {
       if (!path.isEnabled() || value == Float.MAX_VALUE || value == Float.MIN_VALUE) return;
@@ -835,7 +835,7 @@ public class CustomOHLC extends com.motivewave.platform.sdk.study.Study
         var f = font.getFont();
         String valFmt = ctx.format(value);
         var color = path.getColor();
-        
+
         String lbl = prefix + valFmt;
         if (path.isShowTag()) {
           if (path.getTagFont() != null) f = path.getTagFont();
@@ -844,7 +844,7 @@ public class CustomOHLC extends com.motivewave.platform.sdk.study.Study
           if (path.isShowTagValue()) lbl += " " + valFmt;
           if (path.getTagTextColor() != null) color = path.getTagTextColor();
         }
-        
+
         gc.setFont(f);
         gc.setColor(color);
         var fm = gc.getFontMetrics();
@@ -879,7 +879,7 @@ public class CustomOHLC extends com.motivewave.platform.sdk.study.Study
         gc.drawLine(x, y, x2, y);
       }
     }
-    
+
     @Override
     public boolean equals(Object o)
     {
@@ -904,7 +904,7 @@ public class CustomOHLC extends com.motivewave.platform.sdk.study.Study
     int oy, hy, ly, cy=-999, poly=-999, ply=-999, phy=-999, oly=-999, ohy=-999, pmhy=-999, pmly=-999, my, rhy, rly, rhy1, rly1, rhy2, rly2, rhy3, rly3, rhy4, rly4, rhy5, rly5;
     int lx, rx, xrth, cx;
   }
-  
+
   class BarCalculator implements BarOperation
   {
     BarCalculator(Instrument instr, LineSet ls, DataSeries series)
@@ -913,7 +913,7 @@ public class CustomOHLC extends com.motivewave.platform.sdk.study.Study
       this.ls = ls;
       this.series = series;
     }
-    
+
     @Override
     public void onBar(Bar bar)
     {
@@ -921,7 +921,7 @@ public class CustomOHLC extends com.motivewave.platform.sdk.study.Study
       if (barIndex < 0 || series.getEndTime(barIndex) <= bar.getStartTime()) {
         barIndex = series.findIndex(barStart);
       }
-      
+
       float barLow = bar.getLow(), barHigh = bar.getHigh();
       if (barStart >= ls.eod) { // roll over to the next day
         series.setPathBreak(barIndex, Values.DHIGH_VAL, true);
@@ -1021,18 +1021,18 @@ public class CustomOHLC extends com.motivewave.platform.sdk.study.Study
           if (barStart >= ls.sodRth && barStart < ls.sodRth + range5) {
             if (barLow < ls.rLow_5) ls.rLow_5 = barLow;
             if (barHigh > ls.rHigh_5) ls.rHigh_5 = barHigh;
-          }        
+          }
 
 
       }
-      
+
       if (rth && barStart < ls.sodRth) return;
-      
+
       // Developing values
       series.setFloat(barIndex, Values.DHIGH_VAL, ls.high);
       series.setFloat(barIndex, Values.DLOW_VAL, ls.low);
       series.setFloat(barIndex, Values.DMID_VAL, ls.mid);
-      
+
       // Hack for non-linear bars, we can have a gap in the data.  If this is the case, fill in the gap (accounting for RTH data)
       if (lastIndex != -1 && barIndex - lastIndex > 1) {
         for(int i = lastIndex+1; i < barIndex; i++) {
@@ -1045,13 +1045,13 @@ public class CustomOHLC extends com.motivewave.platform.sdk.study.Study
       }
       lastIndex = barIndex;
     }
-    
+
     int barIndex = -1, lastIndex = -1;
     Instrument instr;
     LineSet ls;
     DataSeries series;
   }
-  
+
   // TODO: this should be refactored with onTick above
   class TickCalculator implements TickOperation
   {
@@ -1061,7 +1061,7 @@ public class CustomOHLC extends com.motivewave.platform.sdk.study.Study
       this.ls = ls;
       this.series = series;
     }
-    
+
     @Override
     public void onTick(Tick tick)
     {
@@ -1082,7 +1082,7 @@ public class CustomOHLC extends com.motivewave.platform.sdk.study.Study
         }
         nextLs.ohigh = nextLs.olow = price;
 
-        if (time >= nextLs.pmStart && time < nextLs.pmEnd && !isAt7amET(time)) {
+        if (time >= nextLs.pmStart && time < nextLs.pmEnd && !isAt8amET(time)) {
           nextLs.pmlow = nextLs.pmhigh = price;
         }
 
@@ -1130,7 +1130,7 @@ public class CustomOHLC extends com.motivewave.platform.sdk.study.Study
           if (price < ls.olow) ls.olow = price;
           if (price > ls.ohigh) ls.ohigh = price;
         }
-        if (time >= ls.pmStart && time < ls.pmEnd && !isAt7amET(time)) {
+        if (time >= ls.pmStart && time < ls.pmEnd && !isAt8amET(time)) {
           if (price < ls.pmlow) ls.pmlow = price;
           if (price > ls.pmhigh) ls.pmhigh = price;
         }
@@ -1172,7 +1172,7 @@ public class CustomOHLC extends com.motivewave.platform.sdk.study.Study
       series.setFloat(barIndex, Values.DLOW_VAL, ls.low);
       series.setFloat(barIndex, Values.DMID_VAL, ls.mid);
     }
-    
+
     Instrument instr;
     LineSet ls;
     DataSeries series;
