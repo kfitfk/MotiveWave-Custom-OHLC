@@ -629,6 +629,10 @@ public class CustomOHLC extends com.motivewave.platform.sdk.study.Study
     return cal.getTimeInMillis();
   }
 
+  // Dashed stroke for PMH/PML lines (framework does not persist line style)
+  private static final java.awt.Stroke PM_STROKE = new java.awt.BasicStroke(1f, java.awt.BasicStroke.CAP_BUTT, java.awt.BasicStroke.JOIN_MITER, 10f, new float[] {6, 4}, 0f);
+  private static final java.awt.Stroke PM_STROKE_SELECTED = new java.awt.BasicStroke(2f, java.awt.BasicStroke.CAP_BUTT, java.awt.BasicStroke.JOIN_MITER, 10f, new float[] {6, 4}, 0f);
+
   // Keep track of the latest lines
   private List<LineSet> lines = new ArrayList();
   private List<LineSet> visibleLines = new ArrayList();
@@ -788,12 +792,12 @@ public class CustomOHLC extends com.motivewave.platform.sdk.study.Study
       drawLine(gc, ctx, lowPath, x, ly, low, "L:");
       if (cy != -999) drawLine(gc, ctx, closePath, x, cy, prevClose, "C:");
       if (poly != -999) drawLine(gc, ctx, pOpenPath, x, poly, popen, "PO:");
-      if (ply != -999) drawLine(gc, ctx, pLowPath, x, ply, plow, "PDL:");
-      if (phy != -999) drawLine(gc, ctx, pHighPath, x, phy, phigh, "PDH:");
+      if (ply != -999) drawLine(gc, ctx, pLowPath, lx, ply, plow, "PDL:");
+      if (phy != -999) drawLine(gc, ctx, pHighPath, lx, phy, phigh, "PDH:");
       if (oly != -999) drawLine(gc, ctx, oLowPath, x, oly, olow, "OL:");
       if (ohy != -999) drawLine(gc, ctx, oHighPath, x, ohy, ohigh, "OH:");
-      if (pmly != -999) drawLine(gc, ctx, pmLowPath, x, pmly, pmlow, "PML:");
-      if (pmhy != -999) drawLine(gc, ctx, pmHighPath, x, pmhy, pmhigh, "PMH:");
+      if (pmly != -999) drawDashedLine(gc, ctx, pmLowPath, x, pmly, pmlow, "PML:");
+      if (pmhy != -999) drawDashedLine(gc, ctx, pmHighPath, x, pmhy, pmhigh, "PMH:");
       drawLine(gc, ctx, midPath, x, my, (low + high)/2, "M:");
       drawLine(gc, ctx, rLowPath, xrth, rly, rLow, "ORL1:");
       drawLine(gc, ctx, rHighPath, xrth, rhy, rHigh, "ORH1:");
@@ -869,6 +873,64 @@ public class CustomOHLC extends com.motivewave.platform.sdk.study.Study
             gc.drawLine(x+w+5, y, x2, y);
             gc.drawString(lbl, x, y+fm.getAscent()/2);
           }
+          break;
+        case MIDDLE:
+          int _cx = (x + x2)/2;
+          if (_cx < x + 5) gc.drawLine(x, y, x2, y);
+          else {
+            gc.drawLine(x, y, _cx-w/2 - 2, y);
+            gc.drawString(lbl, _cx-w/2, y+fm.getAscent()/2);
+            gc.drawLine(_cx+w/2+2, y, x2, y);
+          }
+          break;
+        }
+      }
+      else {
+        gc.drawLine(x, y, x2, y);
+      }
+    }
+
+    void drawDashedLine(Graphics2D gc, DrawContext ctx, PathInfo path, int x, int y, float value, String prefix)
+    {
+      if (!path.isEnabled() || value == Float.MAX_VALUE || value == Float.MIN_VALUE) return;
+      gc.setStroke(ctx.isSelected() ? PM_STROKE_SELECTED : PM_STROKE);
+      gc.setColor(path.getColor());
+      var gb = ctx.getBounds();
+      if (x < gb.x) x = gb.x;
+      int x2 = rx > gb.x + gb.width ? gb.x+gb.width : rx;
+
+      if (font != null && font.isEnabled()) {
+        var f = font.getFont();
+        String valFmt = ctx.format(value);
+        var color = path.getColor();
+
+        String lbl = prefix + valFmt;
+        if (path.isShowTag()) {
+          if (path.getTagFont() != null) f = path.getTagFont();
+          lbl = path.getTag();
+          if (lbl == null) lbl = "";
+          if (path.isShowTagValue()) lbl += " " + valFmt;
+          if (path.getTagTextColor() != null) color = path.getTagTextColor();
+        }
+
+        gc.setFont(f);
+        gc.setColor(color);
+        var fm = gc.getFontMetrics();
+        int w = fm.stringWidth(lbl);
+        gc.setStroke(ctx.isSelected() ? PM_STROKE_SELECTED : PM_STROKE);
+        gc.setColor(path.getColor());
+        switch(align) {
+        case RIGHT:
+          gc.drawLine(x, y, x2-w-4, y);
+          gc.setColor(color);
+          gc.drawString(lbl, x2-w, y+fm.getAscent()/2);
+          break;
+        case LEFT:
+          gc.setColor(color);
+          gc.drawString(lbl, x+2, y+fm.getAscent()/2);
+          gc.setStroke(ctx.isSelected() ? PM_STROKE_SELECTED : PM_STROKE);
+          gc.setColor(path.getColor());
+          gc.drawLine(x+w+4, y, x2, y);
           break;
         case MIDDLE:
           int _cx = (x + x2)/2;
