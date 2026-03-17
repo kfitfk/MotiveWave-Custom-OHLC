@@ -378,6 +378,17 @@ public class CustomOHLC extends com.motivewave.platform.sdk.study.Study
         exc.printStackTrace();
       }
 
+      // Ensure today's LineSet exists even if no bars have been processed yet
+      // (e.g., RTH mode before 9:30 AM — BarCalculator never rolled over to today)
+      if (!Util.isEmpty(lines)) {
+        var lastLs = lines.get(lines.size()-1);
+        if (lastLs.eod <= ctx.getCurrentTime()) {
+          long _sod = getStartOfNextPeriod(lastLs.sod, instr, false);
+          var todayLs = new LineSet(lastLs, _sod, getEndOfPeriod(_sod, instr, false), getStartOfPeriodRTH(_sod, instr), instr);
+          if (!lines.contains(todayLs)) lines.add(todayLs);
+        }
+      }
+
       Collections.sort(lines); // This should already be in order
       if (!showAll && lines.size() > maxPrints) {
         while(lines.size() > maxPrints) lines.remove(0);
@@ -409,9 +420,8 @@ public class CustomOHLC extends com.motivewave.platform.sdk.study.Study
       }
     }
 
-    if (rth && !instr.isInsideTradingHours(time, rth)) return;
-
-    // This code should really be refactored with the Tick Calculator below
+    // Day rollover must happen BEFORE the RTH filter so that today's LineSet
+    // (with PDH/PDL from yesterday) is created even from pre-market ticks.
     var series = ctx.getDataSeries();
     if (time >= ls.eod) {
       series.setPathBreak(series.size()-1, Values.DHIGH_VAL, true);
@@ -419,7 +429,12 @@ public class CustomOHLC extends com.motivewave.platform.sdk.study.Study
       series.setPathBreak(series.size()-1, Values.DMID_VAL, true);
       long sod = getStartOfNextPeriod(ls.sod, instr, false);
       var nextLs = new LineSet(ls, sod, getEndOfPeriod(sod, instr, false), getStartOfPeriodRTH(sod, instr), instr);
-      nextLs.low = nextLs.high = nextLs.open = nextLs.close = nextLs.olow = nextLs.ohigh = p;
+      // In RTH mode, don't initialize RTH values from pre-market ticks
+      boolean inRth = !rth || time >= nextLs.sodRth;
+      if (inRth) {
+        nextLs.low = nextLs.high = nextLs.open = nextLs.close = p;
+      }
+      nextLs.olow = nextLs.ohigh = p;
 
       if (time >= nextLs.pmStart && time < nextLs.pmEnd && !isAt8amET(time)) {
         nextLs.pmlow = nextLs.pmhigh = p;
@@ -443,11 +458,14 @@ public class CustomOHLC extends com.motivewave.platform.sdk.study.Study
       if (time >= nextLs.sodRth && time < nextLs.sodRth + range5) {
           nextLs.rLow_5 = nextLs.rHigh_5 = p;}
 
-      nextLs.mid = (nextLs.low + nextLs.high)/2;
+      if (inRth) nextLs.mid = (nextLs.low + nextLs.high)/2;
       if (!lines.contains(nextLs)) lines.add(nextLs);
       ls = nextLs;
     }
-    else {
+
+    if (rth && !instr.isInsideTradingHours(time, rth)) return;
+
+    if (time < ls.eod) {
       if (p < ls.low) ls.low = p;
       if (p > ls.high) ls.high = p;
       if (time < ls.sodRth) {
