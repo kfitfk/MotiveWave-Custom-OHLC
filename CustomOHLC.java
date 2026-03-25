@@ -429,8 +429,8 @@ public class CustomOHLC extends com.motivewave.platform.sdk.study.Study
       series.setPathBreak(series.size()-1, Values.DMID_VAL, true);
       long sod = getStartOfNextPeriod(ls.sod, instr, false);
       var nextLs = new LineSet(ls, sod, getEndOfPeriod(sod, instr, false), getStartOfPeriodRTH(sod, instr), instr);
-      // In RTH mode, don't initialize RTH values from pre-market ticks
-      boolean inRth = !rth || time >= nextLs.sodRth;
+      // In RTH mode, don't initialize RTH values from pre/post-market ticks
+      boolean inRth = !rth || isWithinRTH(time);
       if (inRth) {
         nextLs.low = nextLs.high = nextLs.open = nextLs.close = p;
       }
@@ -463,7 +463,7 @@ public class CustomOHLC extends com.motivewave.platform.sdk.study.Study
       ls = nextLs;
     }
 
-    if (rth && !instr.isInsideTradingHours(time, rth)) return;
+    if (rth && !isWithinRTH(time)) return;
 
     if (time < ls.eod) {
       if (p < ls.low) ls.low = p;
@@ -602,6 +602,14 @@ public class CustomOHLC extends com.motivewave.platform.sdk.study.Study
     Calendar cal = Calendar.getInstance(ET);
     cal.setTimeInMillis(time);
     return cal.get(Calendar.HOUR_OF_DAY) == 8 && cal.get(Calendar.MINUTE) <= 5;
+  }
+
+  /** Check if timestamp falls within US equity RTH: 9:30 AM - 4:00 PM ET */
+  private boolean isWithinRTH(long time) {
+    Calendar cal = Calendar.getInstance(ET);
+    cal.setTimeInMillis(time);
+    int mins = cal.get(Calendar.HOUR_OF_DAY) * 60 + cal.get(Calendar.MINUTE);
+    return mins >= 9 * 60 + 30 && mins < 16 * 60;
   }
 
   private static final float SPIKE_THRESHOLD = 0.005f; // 0.5%
@@ -1015,7 +1023,7 @@ public class CustomOHLC extends com.motivewave.platform.sdk.study.Study
         series.setPathBreak(barIndex, Values.DMID_VAL, true);
         long sod = getStartOfNextPeriod(ls.sod, instr, false);
         var nextLs = new LineSet(ls, sod, getEndOfPeriod(sod, instr, false), getStartOfPeriodRTH(sod, instr), instr);
-        if (!rth || barStart >= nextLs.sodRth) {
+        if (!rth || isWithinRTH(barStart)) {
           nextLs.low = barLow;
           nextLs.high = barHigh;
           nextLs.mid = (nextLs.low + nextLs.high)/2;
@@ -1063,7 +1071,7 @@ public class CustomOHLC extends com.motivewave.platform.sdk.study.Study
         ls = nextLs;
       }
       else {
-        if (!rth || barStart >= ls.sodRth) {
+        if (!rth || isWithinRTH(barStart)) {
           if (barLow < ls.low) ls.low = barLow;
           if (barHigh > ls.high) ls.high = barHigh;
           if (ls.open == Float.MIN_VALUE) ls.open = bar.getOpen();
@@ -1162,7 +1170,7 @@ public class CustomOHLC extends com.motivewave.platform.sdk.study.Study
         series.setPathBreak(barIndex, Values.DMID_VAL, true);
         long sod = getStartOfNextPeriod(ls.sod, instr, false);
         var nextLs = new LineSet(ls, sod, getEndOfPeriod(sod, instr, false), getStartOfPeriodRTH(sod, instr), instr);
-        if (!rth || time >= nextLs.sodRth) {
+        if (!rth || isWithinRTH(time)) {
           nextLs.low = nextLs.high = nextLs.open = nextLs.close = nextLs.ohigh = nextLs.olow = price;
           nextLs.mid = (nextLs.low + nextLs.high)/2;
         }
@@ -1205,7 +1213,7 @@ public class CustomOHLC extends com.motivewave.platform.sdk.study.Study
         ls = nextLs;
       }
       else {
-        if (!rth || time >= ls.sodRth) {
+        if (!rth || isWithinRTH(time)) {
           if (price < ls.low) ls.low = price;
           if (price > ls.high) ls.high = price;
           if (ls.open == Float.MIN_VALUE) ls.open = price;
